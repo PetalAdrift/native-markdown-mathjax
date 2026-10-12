@@ -1,0 +1,22 @@
+# development files
+.gitignore
+.vscode/
+test/
+*.vsix
+
+# markdown-it-mathjax development files
+node_modules/markdown-it-mathjax/test/
+node_modules/markdown-it-mathjax/.travis.yml
+node_modules/markdown-it-mathjax/.npmignore
+node_modules/markdown-it-mathjax/gulpfile.js
+node_modules/markdown-it-mathjax/README.md
+
+# MathJax documentation
+node_modules/mathjax/README.md
+
+# the extension only loads the combined tex-svg browser component
+# exclude all other MathJax ES5 components...
+node_modules/mathjax/es5/**
+
+# ...but keep the one that we actually use !
+!node_modules/mathjax/es5/tex-svg.js
