@@ -87,7 +87,7 @@ Reload VS Code afterward.
 First uninstall (if applicable) the currently installed copy
 
 ```powershell
-code --uninstall-extension local.native-markdown-mathjax
+code --uninstall-extension roselle.native-markdown-mathjax
 ```
 
 From the extension directory
