@@ -3,7 +3,7 @@
   "displayName": "Native Markdown MathJax",
   "description": "MathJax support for VS Code's native Markdown preview",
   "version": "0.0.10",
-  "publisher": "local",
+  "publisher": "roselle",
   "engines": {
     "vscode": "^1.85.0"
   },
