@@ -10,6 +10,16 @@
     const UPDATE_DELAY_MS = 80;
 
     /*
+     * On first opening, VS Code can load this preview script before the initial
+     * Markdown DOM (and, on some machines, before MathJax has fully finished
+     * starting).  In that case there is no later update event until the user
+     * edits the document.  Keep a short startup watch so the first real batch of
+     * math nodes is rendered as soon as it appears.
+     */
+    const INITIAL_RETRY_DELAY_MS = 50;
+    const INITIAL_RETRY_WINDOW_MS = 5000;
+
+    /*
      * Macro definitions are stateful in MathJax 3.  When their source changes,
      * a fresh webview load is the safest way to discard the previous macro
      * table before processing the new preamble.
@@ -27,6 +37,11 @@
     const renderedCache = new Map();
 
     let updateTimer = null;
+    let initialRetryTimer = null;
+    let initialWatchStopTimer = null;
+    let initialObserver = null;
+    let initialRetryDeadline = 0;
+
     let running = false;
     let rerunRequested = false;
     let initialized = false;
@@ -44,6 +59,78 @@
 
     function getMathNodes(root = getRoot()) {
         return Array.from(root.querySelectorAll(MATH_SELECTOR));
+    }
+
+    function mathJaxIsReady(MathJax = window.MathJax) {
+        return Boolean(
+            MathJax &&
+            MathJax.startup &&
+            MathJax.startup.promise &&
+            typeof MathJax.typesetPromise === "function"
+        );
+    }
+
+    function stopInitialWatch() {
+        if (initialRetryTimer !== null) {
+            clearTimeout(initialRetryTimer);
+            initialRetryTimer = null;
+        }
+
+        if (initialWatchStopTimer !== null) {
+            clearTimeout(initialWatchStopTimer);
+            initialWatchStopTimer = null;
+        }
+
+        if (initialObserver) {
+            initialObserver.disconnect();
+            initialObserver = null;
+        }
+    }
+
+    function scheduleInitialRetry() {
+        if (
+            initialized ||
+            initialRetryDeadline === 0 ||
+            Date.now() >= initialRetryDeadline
+        ) {
+            return;
+        }
+
+        if (initialRetryTimer !== null) {
+            return;
+        }
+
+        initialRetryTimer = setTimeout(() => {
+            initialRetryTimer = null;
+            processPreviewUpdate();
+        }, INITIAL_RETRY_DELAY_MS);
+    }
+
+    function watchForInitialMath() {
+        if (initialized || initialObserver || !document.body) {
+            return;
+        }
+
+        initialObserver = new MutationObserver(() => {
+            if (initialized) {
+                stopInitialWatch();
+                return;
+            }
+
+            /*
+             * Either MathJax has become ready or VS Code has inserted the first
+             * rendered Markdown nodes.  Re-run the normal update path.  The
+             * processPreviewUpdate() guard prevents duplicate concurrent work.
+             */
+            if (mathJaxIsReady() || getMathNodes().length > 0) {
+                scheduleInitialRetry();
+            }
+        });
+
+        initialObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
     }
 
     function getTex(node) {
@@ -275,7 +362,15 @@
     async function processPreviewUpdate() {
         const MathJax = window.MathJax;
 
-        if (!MathJax || !MathJax.startup) {
+        /*
+         * During the first preview load, the refresh script can run before the
+         * MathJax startup promise/typesetter is ready.  Do not give up and wait
+         * for a user edit; retry briefly instead.
+         */
+        if (!mathJaxIsReady(MathJax)) {
+            if (!initialized) {
+                scheduleInitialRetry();
+            }
             return;
         }
 
@@ -293,7 +388,19 @@
             const nodes = getMathNodes(root);
 
             if (!initialized) {
+                /*
+                 * A zero-node first pass usually means VS Code has not inserted
+                 * the initial Markdown DOM yet.  Previously this marked the
+                 * preview as initialized, so nothing rendered until the next
+                 * keystroke fired vscode.markdown.updateContent.
+                 */
+                if (nodes.length === 0) {
+                    scheduleInitialRetry();
+                    return;
+                }
+
                 await initialFullRender(MathJax, root, nodes);
+                stopInitialWatch();
                 return;
             }
 
@@ -351,6 +458,27 @@
     );
 
     function initialRender() {
+        /*
+         * The initial Markdown body is populated asynchronously by VS Code.
+         * Start both an immediate attempt and a short-lived observer/retry loop.
+         * Normal live updates continue to use vscode.markdown.updateContent.
+         */
+        initialRetryDeadline = Date.now() + INITIAL_RETRY_WINDOW_MS;
+        watchForInitialMath();
+
+        if (initialWatchStopTimer !== null) {
+            clearTimeout(initialWatchStopTimer);
+        }
+
+        initialWatchStopTimer = setTimeout(() => {
+            initialWatchStopTimer = null;
+
+            if (!initialized && initialObserver) {
+                initialObserver.disconnect();
+                initialObserver = null;
+            }
+        }, INITIAL_RETRY_WINDOW_MS);
+
         clearTimeout(updateTimer);
         updateTimer = setTimeout(() => {
             updateTimer = null;
