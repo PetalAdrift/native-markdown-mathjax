@@ -1,0 +1,299 @@
+/* =========================================
+   Markdown Sticky Notes Theme
+   ========================================= */
+
+:root {
+  --page-bg: #f4f1e8;
+  --note-bg: #fff9b8;
+  --note-border: #d6c766;
+  --note-shadow: rgba(0, 0, 0, 0.12);
+
+  --text: #2d2d2d;
+  --heading: #202020;
+  --muted: #686868;
+
+  --toc-bg: #ffffff;
+  --toc-border: #d8d8d8;
+
+  --remark-bg: #fff3cd;
+  --remark-border: #d9a928;
+
+  --radius: 3px;
+}
+
+/* ---------- Page ---------- */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 3rem 2rem 6rem;
+
+  background: var(--page-bg);
+  color: var(--text);
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  line-height: 1.65;
+}
+
+/* ---------- Main title ---------- */
+
+h1 {
+  margin-bottom: 2rem;
+  font-size: 2.4rem;
+  color: var(--heading);
+}
+
+/* =========================================
+   Table of Contents
+   ========================================= */
+
+#table-of-contents {
+  margin: 0 0 3rem;
+  padding: 1.4rem 1.7rem;
+
+  background: var(--toc-bg);
+  border: 1px solid var(--toc-border);
+  border-radius: var(--radius);
+
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+#table-of-contents h2 {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+
+  font-size: 1.2rem;
+}
+
+#table-of-contents ul {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+#table-of-contents li {
+  margin: 0.25rem 0;
+}
+
+#table-of-contents ul ul {
+  margin-top: 0.15rem;
+}
+
+#table-of-contents a {
+  color: inherit;
+  text-decoration: none;
+}
+
+#table-of-contents a:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
+   ## Sections → Sticky-note boxes
+   ========================================= */
+
+.markdown-section {
+  position: relative;
+
+  margin: 0 0 2.5rem;
+  padding: 1.7rem 2rem 2rem;
+
+  background: var(--note-bg);
+  border: 1px solid var(--note-border);
+  border-radius: 1px;
+
+  box-shadow:
+    3px 5px 10px var(--note-shadow),
+    inset 0 0 20px rgba(255, 255, 255, 0.18);
+
+  /*
+   * Tiny rotation makes each box resemble
+   * a physical sticky note.
+   *
+   * Remove this line if you want perfectly
+   * straight boxes.
+   */
+  transform: rotate(-0.15deg);
+}
+
+/* Tape-like decoration */
+
+.markdown-section::before {
+  content: "";
+
+  position: absolute;
+  top: -11px;
+  left: 50%;
+
+  width: 90px;
+  height: 22px;
+
+  background: rgba(255, 255, 255, 0.52);
+
+  transform: translateX(-50%) rotate(-1deg);
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- ## heading ---------- */
+
+.markdown-section > h2 {
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+
+  padding-bottom: 0.5rem;
+
+  border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+
+  font-size: 1.65rem;
+  color: var(--heading);
+}
+
+/* ---------- ### subsection heading ---------- */
+
+.markdown-section h3 {
+  margin-top: 1.8rem;
+  margin-bottom: 0.6rem;
+
+  font-size: 1.2rem;
+  color: var(--heading);
+}
+
+/* =========================================
+   Remarks
+   ========================================= */
+
+/*
+ * Collapsed remarks are intentionally compact: only the summary
+ * line is visible. The full note-style box appears after expansion.
+ */
+details.remark {
+  margin: 0.7rem 0;
+  padding: 0;
+
+  background: transparent;
+  border: 0;
+}
+
+details.remark summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  width: fit-content;
+  padding: 0.15rem 0.35rem;
+
+  cursor: pointer;
+  user-select: none;
+
+  background: rgba(255, 243, 205, 0.55);
+  border-radius: 2px;
+
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+/* Hide the browser's default disclosure triangle. */
+details.remark summary::-webkit-details-marker {
+  display: none;
+}
+
+details.remark summary::marker {
+  content: "";
+}
+
+/* Light-bulb indicator shown in the collapsed summary line. */
+details.remark summary::before {
+  content: "💡";
+  font-size: 0.95em;
+  line-height: 1;
+}
+
+details.remark summary:hover {
+  background: rgba(255, 243, 205, 0.9);
+  text-decoration: none;
+}
+
+/* Once opened, show the remark content in the fuller note box. */
+details.remark[open] {
+  padding: 0.65rem 0.8rem 0.75rem;
+
+  background: var(--remark-bg);
+  border-left: 3px solid var(--remark-border);
+  border-radius: 2px;
+}
+
+details.remark[open] summary {
+  padding: 0;
+  margin-bottom: 0.55rem;
+
+  background: transparent;
+}
+
+details.remark[open] summary:hover {
+  text-decoration: underline;
+}
+
+/* Keep the expanded content from adding excessive vertical whitespace. */
+details.remark[open] > :last-child {
+  margin-bottom: 0;
+}
+
+/* =========================================
+   General Markdown styling
+   ========================================= */
+
+code {
+  padding: 0.12rem 0.35rem;
+
+  background: rgba(0, 0, 0, 0.07);
+
+  border-radius: 2px;
+
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+}
+
+pre {
+  overflow-x: auto;
+
+  padding: 1rem;
+
+  background: rgba(255, 255, 255, 0.55);
+
+  border-radius: 2px;
+}
+
+pre code {
+  padding: 0;
+  background: transparent;
+}
+
+blockquote {
+  margin-left: 0;
+  padding-left: 1rem;
+
+  border-left: 4px solid rgba(0, 0, 0, 0.18);
+
+  color: var(--muted);
+}
+
+a {
+  color: #315a8c;
+}
+
+img {
+  max-width: 100%;
+}
