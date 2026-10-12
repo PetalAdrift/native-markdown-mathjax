@@ -1,0 +1,42 @@
+{
+  "name": "native-markdown-mathjax",
+  "displayName": "Native Markdown MathJax",
+  "description": "MathJax support for VS Code's native Markdown preview",
+  "version": "0.0.10",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "categories": [
+    "Other"
+  ],
+  "contributes": {
+    "markdown.markdownItPlugins": true,
+    "markdown.previewScripts": [
+      "./mathjax-config.js",
+      "./node_modules/mathjax/es5/tex-svg.js",
+      "./mathjax-refresh.js"
+    ],
+    "configuration": {
+      "title": "Native Markdown MathJax",
+      "properties": {
+        "nativeMarkdownMathJax.preambleFile": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a TeX macro preamble file. Relative paths are resolved against the Markdown document's workspace folder; if the document is not in a workspace, they are resolved against the Markdown file's own directory. Supports ${workspaceFolder} and ${documentDir}. The file should contain raw TeX definitions without $$ delimiters."
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "markdown-it-mathjax": "^2.0.0",
+    "mathjax": "^3.2.2"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.0.0"
+  }
+}
